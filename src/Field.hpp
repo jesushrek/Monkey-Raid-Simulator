@@ -4,13 +4,19 @@
 #include "Creatures.hpp"
 #include "Crops.hpp"
 #include "Monkey.hpp"
-#include "House.hpp"
 #include "Human.hpp"
 #include "Dog.hpp"
+#include "House.hpp"
 
 #include <ostream>
 #include <cstdlib>
 #include <array>
+
+class Crops;
+class Monkey;
+class Human;
+class Dog;
+class Creatures;
 
 template<int HEIGHT, int WIDTH>
 class Field
@@ -23,6 +29,8 @@ class Field
         int m_houseCount{};
         int m_dogCount{};
     public:
+		//all the getters
+		auto& getGrid() { return m_grid; } 
         Field() 
         { 
             //for crops
@@ -32,45 +40,81 @@ class Field
                 { 
                     if(rand() % 2)
                     { 
-                        m_grid[i*WIDTH + j] = new Crops(m_cropCount);
+                        m_grid[i*WIDTH + j] = new Crops(j, i, m_cropCount);
                         ++m_cropCount;
                     }
                 }
             }
 
             //for Monkeys
-            for(auto& object : m_grid)
+            for(int i = 0; i < HEIGHT; ++i)
             { 
-                if((rand() % 100) <= 15)
+                for(int j = 0; j < WIDTH; ++j)
                 { 
-                    if(object == nullptr)
+                    if((rand() % 100) <= 10)
                     { 
-                        object = new Monkey(m_monkeyCount);
-                        ++m_monkeyCount;
+                        if(m_grid[i*WIDTH + j] == nullptr)
+                        { 
+                            m_grid[i*WIDTH + j] = new Monkey(j, i, m_monkeyCount);
+                            ++m_monkeyCount;
+                        }
                     }
                 }
             }
 
             //for Villagers
-            for(auto& object : m_grid)
-            { 
-                if((rand() % 100) <= 20)
+            for(int i = 0; i < HEIGHT; ++i)
+            {
+                for(int j = 0; j < WIDTH; ++j)
                 { 
-                    if(object == nullptr)
+                    if((rand() % 100) <= 20)
                     { 
-                        object = new Human(m_humanCount);
-                        ++m_humanCount;
+                        if(m_grid[i*WIDTH + j] == nullptr)
+                        { 
+                            m_grid[i*WIDTH + j] = new Human(j, i, m_humanCount);
+                            ++m_humanCount;
+                        }
                     }
                 }
             }
 
             //for village dogs
-            for(auto& object : m_grid)
+            for(int i = 0; i < HEIGHT; ++i)
             { 
-                if((rand() % 100) <= 10)
+                for(int j = 0; j < WIDTH; ++j)
                 { 
-                    object = new Dog(m_dogCount);
-                    ++m_dogCount;
+                    if((rand() % 100) <= 10)
+                    { 
+                        if(m_grid[i*WIDTH + j] == nullptr)
+                        { 
+                            m_grid[i*WIDTH + j] = new Dog(j, i, m_dogCount);
+                        }
+                        ++m_dogCount;
+                    }
+                }
+            }
+
+            int toBePlaced = m_humanCount / 3;
+            m_houseCount = 0;
+            bool onObject = false;
+
+            for(int i = 0; i < toBePlaced; ++i)
+            { 
+                bool placed = false;
+
+                while(!placed)
+                { 
+                    int x = rand() % WIDTH;
+                    int y = rand() % HEIGHT;
+
+                    int idx = y * HEIGHT + x;
+
+                    if(m_grid[idx] == nullptr)
+                    { 
+                        m_grid[idx] = new House(x, y, m_houseCount);
+                        ++m_houseCount;
+                        placed = true;
+                    }
                 }
             }
         }
