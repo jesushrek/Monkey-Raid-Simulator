@@ -27,7 +27,7 @@ Creatures::Direction Creatures::bestDirection(Creatures::Point to, Field<Config:
             next.x = (next.x - 1 + Config::WIDTH) % Config::WIDTH;
 
         // If something is infront avoid him
-        if(field.getGrid()[next.x * Config::WIDTH + next.y] != nullptr)
+        if(field.getGrid()[next.y * Config::WIDTH + next.x] != nullptr)
             continue;
 
         int distance = std::abs(next.x - to.x) + std::abs(next.y - to.y);
@@ -58,20 +58,26 @@ void Dog::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
     Creatures* closetMonkey = nullptr;
     for (auto& creature : field.getGrid())
     { 
-        if (creature->getType() == Creatures::Monkey)
+        if(creature != nullptr)
         { 
-            int distance{};
-            distance = std::abs(creature->getPoint().x - getPoint().x)
-                + std::abs(creature->getPoint().y - getPoint().y);
-
-            if(distance < minDistance)
+            if (creature->getType() == Creatures::Monkey)
             { 
-                minDistance = distance;
-                closetMonkey = creature;
+                int distance{};
+                distance = std::abs(creature->getPoint().x - getPoint().x)
+                    + std::abs(creature->getPoint().y - getPoint().y);
+
+                if(distance < minDistance)
+                { 
+                    minDistance = distance;
+                    closetMonkey = creature;
+                }
             }
         }
     }
-    if(closetMonkey)
+
+    if(!closetMonkey)
     { 
+        setState(Idle);
+        return;
     }
 }
