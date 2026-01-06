@@ -1,24 +1,44 @@
+#include "Constants.hpp"
 #include "Creatures.hpp"
 #include "Field.hpp"
-#include "Constants.hpp"
+#include "Crops.hpp"
+#include "House.hpp"
+#include "Dog.hpp"
 
-class Crops;
-class House;
-class Dog;
-class Monkey;
-class Human;
-
-Creatures::Point directionToPoint(Creatures::Direction dir)
+#include <cmath>
+Creatures::Direction Creatures::bestDirection(Creatures::Point to, Field<Config::HEIGHT, Config::WIDTH>& field)
 { 
-    switch(dir)
+    Creatures::Direction choice[] { Creatures::Up, Creatures::Down, Creatures::Left, Creatures::Right };
+    Creatures::Direction bestDirection {};
+
+    int minDistance {1000};
+    for(int i = 0; i < Creatures::MaxDirections; ++i)
     { 
-        case Creatures::Up: return { -1, 0 };
-        case Creatures::Down: return { 1, 0 };
-        case Creatures::Left: return { 0, -1 };
-        case Creatures::Right: return { 0, 1 };
-        default: break;
+        Creatures::Point next = getPoint();
+        Creatures::Direction testDirection{choice[i]};
+
+        if(testDirection == Creatures::Up) 
+            next.y = (next.y - 1 + Config::HEIGHT) % Config::HEIGHT;
+        if(testDirection == Creatures::Down) 
+            next.y = (next.y + 1) % Config::HEIGHT;
+        if(testDirection == Creatures::Right)
+            next.x = (next.x + 1) % Config::WIDTH;
+        if(testDirection == Creatures::Left)
+            next.x = (next.x - 1 + Config::WIDTH) % Config::WIDTH;
+
+        // If something is infront avoid him
+        if(field.getGrid()[next.x * Config::WIDTH + next.y] != nullptr)
+            continue;
+
+        int distance = std::abs(next.x - to.x) + std::abs(next.y - to.y);
+        if(distance < minDistance)
+        { 
+            minDistance = distance;
+            bestDirection = testDirection;
+        }
     }
-    return { 0, 0 };
+
+    return bestDirection;
 }
 
 void Crops::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
@@ -33,15 +53,25 @@ void House::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 
 void Dog::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 { 
+    int minDistance{ 1000 };
     // find the nearest Monkey and move towards it
+    Creatures* closetMonkey = nullptr;
     for (auto& creature : field.getGrid())
     { 
         if (creature->getType() == Creatures::Monkey)
         { 
-            int chance = rand() % 100;
-            if(chance < 70) // 70% chance to move towards the monkey;
+            int distance{};
+            distance = std::abs(creature->getPoint().x - getPoint().x)
+                + std::abs(creature->getPoint().y - getPoint().y);
+
+            if(distance < minDistance)
             { 
+                minDistance = distance;
+                closetMonkey = creature;
             }
         }
+    }
+    if(closetMonkey)
+    { 
     }
 }

@@ -1,6 +1,7 @@
 #ifndef CREATURES_HPP
 #define CREATURES_HPP
 #include "Constants.hpp"
+#include <cmath>
 
 template <int HEIGHT, int WIDTH>
 class Field;
@@ -14,7 +15,7 @@ class Creatures
             Down, 
             Left, 
             Right,
-            NoDirection,
+            MaxDirections,
         };
 
         enum State 
@@ -69,7 +70,7 @@ class Creatures
         }
 
         virtual void Ai(Field<Config::HEIGHT, Config::WIDTH>& field) = 0;
-
+        Direction bestDirection(Point to, Field<Config::HEIGHT, Config::WIDTH>& field);
         //all the setters
         void setPoint(Point point) { m_point = point; }
         void setDirection(Direction direction) { m_direction = direction; }
@@ -77,7 +78,6 @@ class Creatures
         void setHealth(int health) { m_health = health; }
         void setDamage(int damage) { m_damage = damage; }
         void setStatus(bool isAlive) { m_isAlive = isAlive; }
-
 
     protected:
         Creatures(Point point, Type type, int id, char symbol, int health, int damage)
@@ -91,7 +91,7 @@ class Creatures
         char m_symbol{};
         int m_health{};
         int m_damage{};
-        Direction m_direction{NoDirection};
+        Direction m_direction{};
         State m_state{Idle};
         bool m_isAlive{true};
 };
