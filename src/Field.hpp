@@ -1,6 +1,5 @@
 #ifndef FIELD_HPP
 #define FIELD_HPP
-
 #include "Creatures.hpp"
 #include "Crops.hpp"
 #include "Monkey.hpp"
@@ -29,92 +28,112 @@ class Field
         int m_houseCount{};
         int m_dogCount{};
     public:
-		//all the getters
-		auto& getGrid() { return m_grid; } 
+        //all the getters
+        auto& getGrid() { return m_grid; } 
+        int getMonkeyCount() { return m_monkeyCount; }
         Field() 
         { 
-            //for crops
-            for(int i = 0; i < 3; ++i)
+            //crops
+            int fieldSize{ WIDTH / 3 };
+            int dx{ (WIDTH - fieldSize) / 2 };
+            int dy{ (HEIGHT - fieldSize) / 2};
+
+            for(int i = 0; i < fieldSize; ++i)
             { 
-                for(int j = 0; j < WIDTH; ++j)
+                for(int j = 0; j < fieldSize; ++j)
                 { 
-                    if(rand() % 2)
-                    { 
-                        m_grid[i*WIDTH + j] = new Crops(j, i, m_cropCount);
-                        ++m_cropCount;
-                    }
+                    int x {(i+dx)};
+                    int y {(j+dy)};
+                    m_grid[y * WIDTH + x] = new Crops{x, y, x+i};
+                    ++m_cropCount;
                 }
             }
 
-            //for Monkeys
-            for(int i = 0; i < HEIGHT; ++i)
+            summon(Creatures::Monkey, 20);
+            summon(Creatures::Human, 15);
+            summon(Creatures::House, 20);
+            summon(Creatures::Dog, 3);
+        }
+
+        void summon(Creatures::Type t, int count)
+        { 
+            int entityToSummon = count;
+            while(entityToSummon)
             { 
-                for(int j = 0; j < WIDTH; ++j)
-                { 
-                    if((rand() % 100) <= 10)
-                    { 
-                        if(m_grid[i*WIDTH + j] == nullptr)
-                        { 
-                            m_grid[i*WIDTH + j] = new Monkey(j, i, m_monkeyCount);
-                            ++m_monkeyCount;
-                        }
-                    }
+                int x {rand() % WIDTH};
+                int y {rand() % HEIGHT};
+
+                int idx { y * WIDTH + x };
+
+                if(m_grid[idx]) continue;
+
+                if(t == Creatures::Monkey) { 
+                    m_grid[idx] = new Monkey{ x, y, x+y};
+                    ++m_monkeyCount;
                 }
+                if(t == Creatures::Human) { 
+                    m_grid[idx] = new Human{ x, y, x+y};
+                    ++m_humanCount;
+                }
+                if(t == Creatures::Dog) { 
+                    m_grid[idx] = new Dog{ x, y, x+y};
+                    ++m_dogCount;
+                }
+                if(t == Creatures::House) { 
+                    m_grid[idx] = new House{ x, y, x+y};
+                    ++m_houseCount;
+                }
+
+                --entityToSummon;
+            }
+        }
+
+        void updateGrid()
+        { 
+            //set every pointer to false.
+            for(auto& creature : m_grid)
+            { 
+                if(creature == nullptr) continue;
+                creature->setMoved(false);
             }
 
-            //for Villagers
-            for(int i = 0; i < HEIGHT; ++i)
+            for(auto& creature : m_grid)
             {
-                for(int j = 0; j < WIDTH; ++j)
-                { 
-                    if((rand() % 100) <= 20)
-                    { 
-                        if(m_grid[i*WIDTH + j] == nullptr)
-                        { 
-                            m_grid[i*WIDTH + j] = new Human(j, i, m_humanCount);
-                            ++m_humanCount;
-                        }
-                    }
-                }
+                if(creature != nullptr && !creature->getMoved())
+                    creature->Ai(*this);
             }
 
-            //for village dogs
-            for(int i = 0; i < HEIGHT; ++i)
+            for(auto& creature : m_grid)
             { 
-                for(int j = 0; j < WIDTH; ++j)
+                if(creature == nullptr)
+                    continue;
+
+                if(!creature->getStatus())
                 { 
-                    if((rand() % 100) <= 10)
+                    //decrement the counters for dead guys
+                    switch(creature->getType())
                     { 
-                        if(m_grid[i*WIDTH + j] == nullptr)
-                        { 
-                            m_grid[i*WIDTH + j] = new Dog(j, i, m_dogCount);
-                        }
-                        ++m_dogCount;
-                    }
-                }
-            }
+                        case Creatures::Monkey:
+                            --m_monkeyCount;
+                            break;
+                        case Creatures::Crops:
+                            --m_cropCount;
+                            break;
+                        case Creatures::Dog:
+                            --m_dogCount;
+                            break;
+                        case Creatures::Human:
+                            --m_humanCount;
+                            break;
+                        case Creatures::House:
+                            --m_houseCount;
+                            break;
+                        default:
+                            break;
+                    };
 
-            int toBePlaced = m_humanCount / 3;
-            m_houseCount = 0;
-            bool onObject = false;
-
-            for(int i = 0; i < toBePlaced; ++i)
-            { 
-                bool placed = false;
-
-                while(!placed)
-                { 
-                    int x = rand() % WIDTH;
-                    int y = rand() % HEIGHT;
-
-                    int idx = y * HEIGHT + x;
-
-                    if(m_grid[idx] == nullptr)
-                    { 
-                        m_grid[idx] = new House(x, y, m_houseCount);
-                        ++m_houseCount;
-                        placed = true;
-                    }
+                    delete creature;
+                    creature = nullptr;
                 }
             }
         }
@@ -135,10 +154,10 @@ class Field
                 out << "|\n";
             }
 
-            out << "House/s: " << f.m_houseCount
-                << "Monkey/s: " << f.m_monkeyCount
-                << "Dog/s: " << f.m_dogCount
-                << "Villager/s: " << f.m_humanCount 
+            out << "\nHouse(s): " << f.m_houseCount
+                << "\nMonkey(s): " << f.m_monkeyCount
+                << "\nDog(s): " << f.m_dogCount
+                << "\nVillager(s): " << f.m_humanCount 
                 << '\n';
             return out;
         }

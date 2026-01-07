@@ -2,7 +2,7 @@
 #define COSNTANTS_HPP
 namespace Config
 { 
-    constexpr int HEIGHT = 20;
-    constexpr int WIDTH = 10;
+    constexpr int HEIGHT = 60;
+    constexpr int WIDTH = 120;
 };
 #endif

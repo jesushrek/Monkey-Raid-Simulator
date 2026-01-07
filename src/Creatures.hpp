@@ -15,6 +15,10 @@ class Creatures
             Down, 
             Left, 
             Right,
+            Upleft,
+            Upright,
+            Downleft,
+            Downright,
             MaxDirections,
         };
 

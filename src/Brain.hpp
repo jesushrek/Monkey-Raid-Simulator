@@ -18,14 +18,38 @@ Creatures::Point returnPoint(Creatures::Direction dir, Creatures::Point p)
 { 
     Creatures::Point next{p};
     if(dir == Creatures::Up) 
-        next.y = (next.y - 1 + Config::HEIGHT);
+        next.y = (next.y - 1);
     if(dir == Creatures::Down) 
         next.y = (next.y + 1); 
     if(dir == Creatures::Right)
         next.x = (next.x + 1);
     if(dir == Creatures::Left)
-        next.x = (next.x - 1 + Config::WIDTH);
+        next.x = (next.x - 1);
+    if(dir == Creatures::Upleft)
+    {
+        next.x = next.x - 1;
+        next.y = next.y - 1;
+    }
+    if(dir == Creatures::Upright)
+    { 
+        next.x = next.x + 1;
+        next.y = next.y - 1;
+    }
+    if(dir == Creatures::Downleft)
+    { 
+        next.x = next.x + 1;
+        next.y = next.y - 1;
+    }
+    if(dir == Creatures::Downright)
+    {
+        next.x = next.x + 1;
+        next.y = next.y + 1;
+    }
+
     if(dir == Stop)
+        return p;
+
+    if(next.y < 0 || next.y >= Config::HEIGHT || next.x < 0 || next.x >= Config::WIDTH)
         return p;
 
     return next;
@@ -33,10 +57,10 @@ Creatures::Point returnPoint(Creatures::Direction dir, Creatures::Point p)
 
 Creatures::Direction Creatures::fleeDirection(Creatures::Point from, Field<Config::HEIGHT, Config::WIDTH>& field)
 { 
-    Direction choice[] { Up, Down, Left, Right };
+    Direction choice[] { Up, Down, Left, Right, Upright, Upleft, Downright, Downleft };
     Direction bestDirection {};
 
-    int maxDistance {-100};
+    int maxDistance {-1000};
     bool foundBest { false };
     for(int i = 0; i < MaxDirections; ++i)
     { 
@@ -65,8 +89,8 @@ Creatures::Direction Creatures::fleeDirection(Creatures::Point from, Field<Confi
 
 Creatures::Direction Creatures::bestDirection(Creatures::Point to, Field<Config::HEIGHT, Config::WIDTH>& field)
 { 
-    Direction choice[] { Up, Down, Left, Right };
-    Direction bestDirection {};
+    Direction choice[] { Up, Down, Left, Right, Upright, Upleft, Downright, Downleft };
+    Direction bdir {};
 
     int minDistance {1000};
     bool foundBest { false };
@@ -85,14 +109,14 @@ Creatures::Direction Creatures::bestDirection(Creatures::Point to, Field<Config:
         { 
             foundBest = true;
             minDistance = distance;
-            bestDirection = testDirection;
+            bdir = testDirection;
         }
     }
 
     if(!foundBest)
         return Stop;
 
-    return bestDirection;
+    return bdir;
 }
 
 void Crops::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
@@ -116,6 +140,12 @@ void Creatures::move(Direction dir, Field<Config::HEIGHT, Config::WIDTH>& field)
     } 
     Point oldPoint { getPoint() };
     Point newPoint { returnPoint(dir, oldPoint) };
+
+    if(newPoint.x == oldPoint.x && newPoint.y == oldPoint.y)
+    {
+        setMoved(true);
+        return;
+    }
 
     //if something is on the way avoid him
     if (field.getGrid()[newPoint.y * Config::WIDTH + newPoint.x] != nullptr) 
@@ -236,10 +266,13 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 
             else if(neighbor->getType() == Creatures::Crops)
             {
-                attack(*neighbor);
-                addCorn();
-                setMoved(true);
-                return;
+                //50 % success rate
+                if(rand() % 2) { 
+                    attack(*neighbor);
+                    addCorn();
+                    setMoved(true);
+                    return;
+                }
             }
         }
     }
