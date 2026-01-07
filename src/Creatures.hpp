@@ -50,6 +50,9 @@ class Creatures
         bool getStatus() const { return m_isAlive; }
         Direction getDirection() const { return m_direction; }
         State getState() const { return m_state; }
+        bool getMoved() const { return m_moved; }
+
+        // other attributes
         virtual ~Creatures() {};
         void takeDamage(int amount) 
         { 
@@ -70,14 +73,17 @@ class Creatures
         }
 
         virtual void Ai(Field<Config::HEIGHT, Config::WIDTH>& field) = 0;
-        Direction bestDirection(Point to, Field<Config::HEIGHT, Config::WIDTH>& field);
-        //all the setters
+        Direction bestDirection(Point to, Field<Config::HEIGHT, Config::WIDTH>& field); // is in brain.hpp
+                                                                                        //all the setters
         void setPoint(Point point) { m_point = point; }
         void setDirection(Direction direction) { m_direction = direction; }
         void setState(State state) { m_state = state; } 
         void setHealth(int health) { m_health = health; }
         void setDamage(int damage) { m_damage = damage; }
         void setStatus(bool isAlive) { m_isAlive = isAlive; }
+        void setMoved(bool moved) { m_moved = moved; }
+        void move(Direction dir, Field<Config::HEIGHT, Config::WIDTH>& field);
+        Creatures* returnCloset(Field<Config::HEIGHT, Config::WIDTH>& field, Type target);
 
     protected:
         Creatures(Point point, Type type, int id, char symbol, int health, int damage)
@@ -93,6 +99,7 @@ class Creatures
         int m_damage{};
         Direction m_direction{};
         State m_state{Idle};
+        bool m_moved{false};
         bool m_isAlive{true};
 };
 
