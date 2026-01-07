@@ -74,7 +74,9 @@ class Creatures
 
         virtual void Ai(Field<Config::HEIGHT, Config::WIDTH>& field) = 0;
         Direction bestDirection(Point to, Field<Config::HEIGHT, Config::WIDTH>& field); // is in brain.hpp
-                                                                                        //all the setters
+        Direction fleeDirection(Point from, Field<Config::HEIGHT, Config::WIDTH>& field); // is in brain.hpp
+
+
         void setPoint(Point point) { m_point = point; }
         void setDirection(Direction direction) { m_direction = direction; }
         void setState(State state) { m_state = state; } 
