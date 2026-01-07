@@ -133,9 +133,9 @@ void House::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 
 void Creatures::move(Direction dir, Field<Config::HEIGHT, Config::WIDTH>& field)
 {
+    setMoved(true);
     if(dir == Stop)
     { 
-        setMoved(true);
         return;
     } 
     Point oldPoint { getPoint() };
@@ -143,23 +143,21 @@ void Creatures::move(Direction dir, Field<Config::HEIGHT, Config::WIDTH>& field)
 
     if(newPoint.x == oldPoint.x && newPoint.y == oldPoint.y)
     {
-        setMoved(true);
         return;
     }
 
     //if something is on the way avoid him
     if (field.getGrid()[newPoint.y * Config::WIDTH + newPoint.x] != nullptr) 
     {
-        setMoved(true);
         return;
     }
 
 
     setPoint(newPoint);
-    setMoved(true);
-
-    field.getGrid()[newPoint.y * Config::WIDTH + newPoint.x] = field.getGrid()[oldPoint.y * Config::WIDTH + oldPoint.x];
-    field.getGrid()[oldPoint.y * Config::WIDTH + oldPoint.x] = nullptr;
+    int oldIndex = oldPoint.y * Config::WIDTH + oldPoint.x;
+    int newIndex = newPoint.y * Config::WIDTH + newPoint.x;
+    field.getGrid()[newIndex] = field.getGrid()[oldIndex];
+    field.getGrid()[oldIndex] = nullptr;
 }
 
 Creatures* Creatures::returnCloset(Field<Config::HEIGHT, Config::WIDTH>& field, Type target)
