@@ -8,6 +8,7 @@
 #include "House.hpp"
 #include "Dog.hpp"
 #include "Monkey.hpp"
+#include "Human.hpp"
 
 #include <cmath>
 
@@ -118,7 +119,10 @@ void Creatures::move(Direction dir, Field<Config::HEIGHT, Config::WIDTH>& field)
 
     //if something is on the way avoid him
     if (field.getGrid()[newPoint.y * Config::WIDTH + newPoint.x] != nullptr) 
+    {
+        setMoved(true);
         return;
+    }
 
 
     setPoint(newPoint);
@@ -165,6 +169,7 @@ void Dog::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
     if(!closetMonkey)
     { 
         setState(Idle);
+        setMoved(true);
         return;
     }
     setState(Moving);
@@ -217,12 +222,15 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
                 else
                 { 
                     attack(*neighbor);
+                    setMoved(true);
                     return;
                 }
             }
+
             else if(neighbor->getType() == Creatures::House)
             {
                 attack(*neighbor);
+                setMoved(true);
                 return;
             }
 
@@ -230,6 +238,7 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
             {
                 attack(*neighbor);
                 addCorn();
+                setMoved(true);
                 return;
             }
         }
@@ -273,10 +282,66 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
     { 
         setState(Idle);
         move(Stop, field);
+        setMoved(true);
         return;
     }
 
     Creatures::Direction bestDir = bestDirection(closetTarget->getPoint(), field);
+    move(bestDir, field);
+}
+
+void Human::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
+{ 
+    for(int h = -1; h <= 1; ++h)
+    { 
+        for(int w = -1; w <= 1; ++w)
+        { 
+            Creatures::Point humanPoint{ getPoint() };
+
+            if((w == 0 && h == 0)
+                    || ((h + humanPoint.y) >= Config::HEIGHT)
+                    || ((w + humanPoint.x) >= Config::WIDTH) 
+                    || ((h + humanPoint.y) < 0)
+                    || ((w + humanPoint.x) < 0)
+              )
+                continue;
+
+            int y = (h + humanPoint.y);
+            int x = (w + humanPoint.x);
+
+            Creatures* neighbor { field.getGrid()[y * Config::WIDTH + x] }; 
+            if(neighbor == nullptr) continue;
+
+            if(neighbor->getType() == Creatures::Monkey)
+            { 
+                if(rand() % 2)
+                { 
+                    Creatures::Direction bestDir { fleeDirection(neighbor->getPoint(), field) };
+                    move(bestDir, field);
+                    setState(Moving);
+                    setMoved(true);
+                    return;
+                }
+                else
+                { 
+                    attack(*neighbor);
+                    setMoved(true);
+                    return;
+                }
+            }
+        }
+    }
+
+    Creatures* closetMonkey { returnCloset(field, Creatures::Monkey) };
+
+    if(closetMonkey == nullptr)
+    { 
+        setState(Idle);
+        setMoved(true);
+        move(Stop, field);
+        return;
+    }
+    Creatures::Direction bestDir { bestDirection(closetMonkey->getPoint(), field) };
     move(bestDir, field);
 }
 
