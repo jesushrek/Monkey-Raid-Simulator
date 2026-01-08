@@ -286,10 +286,14 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
     }
     else if(cropsNearby)
     { 
-        if(immediateTarget) { 
+        if(rand() % 4)
+        {
+        if(immediateTarget) 
+        { 
             attack(*immediateTarget);
             setMoved(true);
             return;
+        }
         }
     }
     else
@@ -388,11 +392,6 @@ void Human::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
             { 
                 immediateTarget = neighbor;
                 ++countMonkeys;
-            }
-            else if(neighbor->getType() == Creatures::Crops)
-            { 
-                if(rand() % 7)
-                    attack(*neighbor);
             }
         }
     }

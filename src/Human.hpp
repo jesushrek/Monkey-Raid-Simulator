@@ -11,7 +11,7 @@ class Human:public Creatures
 { 
     public:
         Human(int x, int y, int id)
-            :Creatures { Point {x, y}, Creatures::Human, id, 'V', 250, 1 }
+            :Creatures { Point {x, y}, Creatures::Human, id, 'V', 350, 1 }
         {}
         virtual void Ai(Field<Config::HEIGHT, Config::WIDTH>& field) override;
 };

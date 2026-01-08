@@ -49,10 +49,10 @@ class Field
                 }
             }
 
-            summon(Creatures::Monkey, 45);
-            summon(Creatures::Human, 30);
-            summon(Creatures::House, 20);
-            summon(Creatures::Dog, 3);
+            summon(Creatures::Monkey, Config::MONKEYCOUNT);
+            summon(Creatures::Human, Config::HUMANCOUNT);
+            summon(Creatures::House, Config::HOUSECOUNT);
+            summon(Creatures::Dog, Config::DOGCOUNT);
         }
 
         void summon(Creatures::Type t, int count)
