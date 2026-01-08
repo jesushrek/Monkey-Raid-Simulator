@@ -49,8 +49,8 @@ class Field
                 }
             }
 
-            summon(Creatures::Monkey, 20);
-            summon(Creatures::Human, 15);
+            summon(Creatures::Monkey, 45);
+            summon(Creatures::Human, 30);
             summon(Creatures::House, 20);
             summon(Creatures::Dog, 3);
         }

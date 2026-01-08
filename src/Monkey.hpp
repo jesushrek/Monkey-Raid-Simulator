@@ -14,7 +14,7 @@ class Monkey:public Creatures
         int m_cornCount{};
     public:
         Monkey(int x, int y, int id)
-            :Creatures { Point{x, y}, Creatures::Monkey, id, 'm', 100, 2 }, m_cornCount{0}
+            :Creatures { Point{x, y}, Creatures::Monkey, id, 'm', 220, 4 }, m_cornCount{0}
         {}
         virtual void Ai(Field<Config::HEIGHT, Config::WIDTH>& field) override;
         int getCorn() const { return m_cornCount; }

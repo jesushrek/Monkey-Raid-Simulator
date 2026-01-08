@@ -37,8 +37,8 @@ Creatures::Point returnPoint(Creatures::Direction dir, Creatures::Point p)
     }
     if(dir == Creatures::Downleft)
     { 
-        next.x = next.x + 1;
-        next.y = next.y - 1;
+        next.x = next.x - 1;
+        next.y = next.y + 1;
     }
     if(dir == Creatures::Downright)
     {
@@ -72,7 +72,8 @@ Creatures::Direction Creatures::fleeDirection(Creatures::Point from, Field<Confi
         if(field.getGrid()[next.y * Config::WIDTH + next.x] != nullptr)
             continue;
 
-        int distance = std::abs(next.x - from.x) + std::abs(next.y - from.y);
+
+        int distance{ std::max(std::abs(next.x - from.x), std::abs(next.y - from.y)) };
         if(distance > maxDistance)
         { 
             foundBest = true;
@@ -104,7 +105,7 @@ Creatures::Direction Creatures::bestDirection(Creatures::Point to, Field<Config:
         if(field.getGrid()[next.y * Config::WIDTH + next.x] != nullptr)
             continue;
 
-        int distance = std::abs(next.x - to.x) + std::abs(next.y - to.y);
+        int distance {std::max(std::abs(next.x - to.x), std::abs(next.y - to.y))};
         if(distance < minDistance)
         { 
             foundBest = true;
@@ -172,8 +173,7 @@ Creatures* Creatures::returnCloset(Field<Config::HEIGHT, Config::WIDTH>& field, 
             if(creature->getType() == target)
             { 
                 int distance { 
-                    std::abs(creature->getPoint().x - getPoint().x)
-                        + std::abs(creature->getPoint().y - getPoint().y) 
+                    std::max(std::abs(creature->getPoint().x - getPoint().x), std::abs(creature->getPoint().y - getPoint().y)) 
                 };
 
                 if(distance < minDistance)
@@ -208,6 +208,14 @@ void Dog::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 { 
     //how the monkey deals with his neighbors
+
+    int countHumans{};
+    bool dogsNearby { false };
+    bool houseNearby { false };
+    bool cropsNearby { false };
+
+    Creatures* immediateTarget{ nullptr };
+    Creatures* threat{ nullptr };
     for(int h = -1; h <= 1; ++h)
     { 
         for(int w = -1; w <= 1; ++w)
@@ -225,54 +233,88 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
             int y = (h + monkeyPoint.y);
             int x = (w + monkeyPoint.x);
 
+
             Creatures* neighbor { field.getGrid()[y * Config::WIDTH + x] }; 
+
+            if(neighbor)
+                countHumans += (neighbor->getType() == Creatures::Human)? 1 : 0;
+
             if(neighbor == nullptr)
-            {
                 continue;
-            }
+            // if there are more then 2 humans as neighbors just run
             else if(neighbor->getType() == Creatures::Dog)
-            { 
-                Creatures::Direction bestDir { fleeDirection(neighbor->getPoint(), field) };
-                move(bestDir, field);
-                setState(Moving);
-                return;
-            }
+                dogsNearby = true;
+
             else if(neighbor->getType() == Creatures::Human)
             { 
-                if(rand() % 2)
-                { 
-                    Creatures::Direction bestDir { fleeDirection(neighbor->getPoint(), field) };
-                    move(bestDir, field);
-                    setState(Moving);
-                    setMoved(true);
-                    return;
-                }
-                else
-                { 
-                    attack(*neighbor);
-                    setMoved(true);
-                    return;
-                }
+                threat = neighbor;
+                ++countHumans;
             }
 
             else if(neighbor->getType() == Creatures::House)
             {
-                attack(*neighbor);
-                setMoved(true);
-                return;
+                immediateTarget = neighbor;
+                houseNearby = true;
             }
 
             else if(neighbor->getType() == Creatures::Crops)
             {
-                //50 % success rate
-                if(rand() % 2) { 
-                    attack(*neighbor);
-                    addCorn();
-                    setMoved(true);
-                    return;
-                }
+                immediateTarget = neighbor;
+                cropsNearby = true;
             }
         }
+    }
+
+    if(countHumans > 2 || dogsNearby)
+    { 
+        if(threat) 
+        { 
+            Creatures::Direction bestDir { fleeDirection(threat->getPoint(), field) };
+            move(bestDir, field);
+            setState(Moving);
+            setMoved(true);
+            return;
+        }
+    }
+    else if(houseNearby)
+    { 
+        if(immediateTarget) { 
+            attack(*immediateTarget);
+            setMoved(true);
+            return;
+        }
+    }
+    else if(cropsNearby)
+    { 
+        if(immediateTarget) { 
+            attack(*immediateTarget);
+            setMoved(true);
+            return;
+        }
+    }
+    else
+    {
+        if(rand() % 2)
+        { 
+            if(threat) 
+            { 
+                Creatures::Direction bestDir { fleeDirection(threat->getPoint(), field) };
+                move(bestDir, field);
+                setState(Moving);
+                setMoved(true);
+                return;
+            }
+        }
+        else
+        { 
+            if(threat)
+            {
+                attack(*threat);
+                setMoved(true);
+                return;
+            }
+        }
+
     }
     /*
        Creatures::Type targets[] { 
@@ -295,16 +337,13 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 
             if(target->getType() == Creatures::Dog || target->getType() == Creatures::Monkey) continue;
 
-            int distance { 
-                std::abs(target->getPoint().x - getPoint().x) + 
-                    std::abs(target->getPoint().y - getPoint().y)
+            int distance { std::max(std::abs(target->getPoint().x - getPoint().x) , std::abs(target->getPoint().y - getPoint().y))
             };
 
             if(distance < minDistance)
             { 
                 minDistance = distance;
                 closetTarget = target;
-                target = nullptr;
             }
         }
     }
@@ -323,6 +362,8 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 
 void Human::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 { 
+    int countMonkeys{};
+    Creatures* immediateTarget { nullptr };
     for(int h = -1; h <= 1; ++h)
     { 
         for(int w = -1; w <= 1; ++w)
@@ -345,26 +386,43 @@ void Human::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
 
             if(neighbor->getType() == Creatures::Monkey)
             { 
-                if(rand() % 2)
-                { 
-                    Creatures::Direction bestDir { fleeDirection(neighbor->getPoint(), field) };
-                    move(bestDir, field);
-                    setState(Moving);
-                    setMoved(true);
-                    return;
-                }
-                else
-                { 
+                immediateTarget = neighbor;
+                ++countMonkeys;
+            }
+            else if(neighbor->getType() == Creatures::Crops)
+            { 
+                if(rand() % 7)
                     attack(*neighbor);
-                    setMoved(true);
-                    return;
-                }
+            }
+        }
+    }
+
+    if(countMonkeys > 2)
+    {
+        if(immediateTarget)
+        { 
+            Creatures::Direction bestDir { fleeDirection(immediateTarget->getPoint(), field) };
+            move(bestDir, field);
+            setState(Moving);
+            setMoved(true);
+            return;
+        }
+
+    }
+    else
+    {
+        if(rand() % 2)
+        {
+            if(immediateTarget) 
+            { 
+                attack(*immediateTarget);
+                setMoved(true);
+                return;
             }
         }
     }
 
     Creatures* closetMonkey { returnCloset(field, Creatures::Monkey) };
-
     if(closetMonkey == nullptr)
     { 
         setState(Idle);
@@ -372,8 +430,13 @@ void Human::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
         move(Stop, field);
         return;
     }
-    Creatures::Direction bestDir { bestDirection(closetMonkey->getPoint(), field) };
-    move(bestDir, field);
+
+    if(closetMonkey)
+    {
+        Creatures::Direction bestDir { bestDirection(closetMonkey->getPoint(), field) };
+        move(bestDir, field);
+    }
+    setMoved(true);
 }
 
 #endif
