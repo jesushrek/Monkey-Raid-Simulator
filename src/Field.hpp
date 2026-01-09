@@ -33,6 +33,7 @@ class Field
         int getMonkeyCount() { return m_monkeyCount; }
         Field() 
         { 
+#ifdef CROPS
             //crops
             int fieldSize{ WIDTH / 3 };
             int dx{ (WIDTH - fieldSize) / 2 };
@@ -48,6 +49,7 @@ class Field
                     ++m_cropCount;
                 }
             }
+#endif
 
             summon(Creatures::Monkey, Config::MONKEYCOUNT);
             summon(Creatures::Human, Config::HUMANCOUNT);
@@ -158,6 +160,7 @@ class Field
                 << "\nMonkey(s): " << f.m_monkeyCount
                 << "\nDog(s): " << f.m_dogCount
                 << "\nVillager(s): " << f.m_humanCount 
+                << "\nCrops(s): " << f.m_cropCount
                 << '\n';
             return out;
         }

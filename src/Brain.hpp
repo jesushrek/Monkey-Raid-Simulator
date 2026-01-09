@@ -196,7 +196,10 @@ void Dog::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
     Creatures* closetMonkey = returnCloset(field, Type::Monkey);
     if(!closetMonkey)
     { 
-        setState(Idle);
+        Creatures* closetHuman = returnCloset(field, Type::Human); // if the dog doesn't find a monkey just move towards the closest human
+        setState(Moving);
+        Creatures::Direction direction = bestDirection(closetHuman->getPoint(), field);
+        move(direction, field);
         setMoved(true);
         return;
     }
@@ -288,12 +291,12 @@ void Monkey::Ai(Field<Config::HEIGHT, Config::WIDTH>& field)
     { 
         if(rand() % 4)
         {
-        if(immediateTarget) 
-        { 
-            attack(*immediateTarget);
-            setMoved(true);
-            return;
-        }
+            if(immediateTarget) 
+            { 
+                attack(*immediateTarget);
+                setMoved(true);
+                return;
+            }
         }
     }
     else
